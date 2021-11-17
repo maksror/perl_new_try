@@ -1,0 +1,51 @@
+<HTML>
+<body>
+
+<table border="1" cellspacing="1" cellpadding="1" width="70%" >
+    <tr align="center">
+        <td>
+            <a href="/">Main Page</a>
+        </td>
+        <td>
+            <form action="/" method="post">
+                <div>
+                    <input name="name" id="name" size="30">
+                </div>
+                <div>
+                    <input name="phone" id="phone" size="30">
+                </div>
+                <div>
+                    <button>Add contact</button>
+                </div>
+            </form>
+        </td>
+        <td>
+            <form action="/search" method="post">
+                <div>
+                    <input name="date" id="data" size="30">
+                </div>
+                <div>
+                    <button>search</button>
+                </div>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<table border="1" cellspacing="1" cellpadding="1" width="70%" style="background-color: #0099cc">
+    <tr>
+        <th style="width: 20px;">N</th>
+        <th>Name</th>
+        <th>Phone number</th>
+    </tr>
+    %for my $n (0..$len) {
+	    <tr>
+            <td> <%= $n %> </td>
+            <td> <%= ${$rows}[$n][0] %> </td>
+            <td> <%= ${$rows}[$n][1] %> </td>
+        </tr>
+    %}
+</table>
+
+</body>
+</HTML>

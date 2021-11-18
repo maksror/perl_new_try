@@ -9,25 +9,31 @@ use warnings;
 
 get '/' => sub ($c) {
     my @rows = show_all ();
-    $c->stash ('len'=>$#rows);
-    $c->render (template => 'index', rows => \@rows);
+    $c->stash( 'len'=>$#rows );
+    $c->render( template => 'index', 
+                rows => \@rows, );
 };
 
 post '/' => sub ($c) {
-    my $result = add_contact ($c->param ('name'), 
+    my $result = add_contact( $c->param ('name'), 
                               $c->param ('phone'),
-                             );
+                            );
     if ( $result eq 0 ) {
-        $c->redirect_to ('/');
+        $c->redirect_to( '/' );
     } 
     else {
-        $c->stash (error => $result);
-        $c->render (template => 'alert');
+        $c->stash( error => $result );
+        $c->render( template => 'alert' );
     }
 };
 
 post '/search' => sub ($c) {
-    $c->redirect_to ('/');
+    my $pattern = $c->param( 'data' );
+    my @rows = search( $pattern );
+    
+    $c->stash( 'len'=>$#rows );
+    $c->render( template => 'index', 
+                rows => \@rows, );
 };
 
 app->start;

@@ -1,4 +1,4 @@
 <script type="text/javascript">
-    alert( <%= $error %>");
+    alert("<%= $error %>");
     window.location.href = window.location.href;
 </script>

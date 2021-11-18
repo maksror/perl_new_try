@@ -9,10 +9,10 @@
         <td>
             <form action="/" method="post">
                 <div>
-                    <input name="name" id="name" size="30">
+                    Name <input name="name" id="name" size="30">
                 </div>
                 <div>
-                    <input name="phone" id="phone" size="30">
+                    Phone <input name="phone" id="phone" size="30">
                 </div>
                 <div>
                     <button>Add contact</button>
@@ -22,7 +22,7 @@
         <td>
             <form action="/search" method="post">
                 <div>
-                    <input name="date" id="data" size="30">
+                    <input name="data" id="data" size="30">
                 </div>
                 <div>
                     <button>search</button>

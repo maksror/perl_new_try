@@ -29,6 +29,17 @@
                 </div>
             </form>
         </td>
+        <td>
+            <form action="/delete" method="post">
+                <div>
+                    <input name="data" id="data" size="30">
+                </div>
+                <div>
+                    <button>delete</button>
+                </div>
+            </form>
+        </td>
+
     </tr>
 </table>
 

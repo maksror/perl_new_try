@@ -13,11 +13,11 @@ my $PASS = "si7ughaehuoy7quaHahp";
 # Входные данные: нет
 # Выходные данные: 
 #   Успешное подключение: линка с mysql подключением
-#   Внутреняя ошибка: хэш "Alert"=>"Оповещение"
 sub create_connect {
     my $link = DBI -> connect( "DBI:mysql:database=$DB;", $USER, $PASS, {'RaiseError' => 0} ) 
-    # Если по какой либо причине подключение не удалось, то возвращаем указанную ошибку.
-    or return( "Something went wrong! Please contact us with this error" );
+    # Если по какой либо причине подключение не удалось, то умираем. 
+    # Конечному пользователю внутренние ошибки знать не нужно.
+    or die $DBI::errstr;
     # Если всё хорошо, то возвращаем линку
     return( $link );
 }
@@ -148,13 +148,9 @@ sub search {
 #   Внутреняя ошибка(подключения к БД или SELECT запроса): хэш "Alert"=>"Оповещение"
 sub show_all {
     my $link = create_connect();
-    if (grep /^Something/, $link) {
-        return( {"Alert" => $link} );
-    }
+
     my $query = "SELECT * FROM `contacts`";
-    my $query_result = $link -> selectall_hashref( $query, 'Phone' ) 
-    # Если запрос неудчаный - отдаём оповещение
-    or return ( {"Alert" => "Something went wrong! Please contact us with this error"} ) ;
+    my $query_result = $link -> selectall_hashref( $query, 'Phone' ) or die $link->errstr;
     $link -> disconnect;
     # Превращаем полученные данные в удобные для обработки - хэш телефон=>Имя(телефон Primary Key в БД).
     my %result;
@@ -177,12 +173,9 @@ sub add_contact {
 
     if ($is_valid eq 0) { 
         my $link = create_connect();
-        # Если соединение не удалось - отдаём оповещение
-        if (grep /^Something/, $link) {
-            return( {"Alert" => $link} );
-        }
+
         my $query = "INSERT INTO `contacts` (Name,Phone) VALUES (?,?)";
-        $link -> do( $query, undef, ($name, $number) ) or die( $link->errstr );
+        $link -> do( $query, undef, ($name, $number) ) or die $link->errstr;
         $link -> disconnect;
         return( {"Alert" => "Contact was successfully added"} );
     } 
@@ -221,12 +214,9 @@ sub remove_contact {
     }
 
     my $link = create_connect();
-    if (grep /^Something/, $link) {
-        return( {"Alert" => $link} );
-    }
 
     my $query = "DELETE FROM `contacts` WHERE `Phone` = ?";
-    my $res = $link -> do( $query, undef, $phone ) or die( $link->errstr );
+    my $res = $link -> do( $query, undef, $phone ) or die $link->errstr;
     $link -> disconnect;
     if ($res eq "0E0"){
         return( {"Alert" => "Phone number was not found"} );;    
@@ -248,7 +238,7 @@ sub modify {
                      WHERE `Phone` = ?";
 
         my $link = create_connect();
-        $link -> do( $query, undef, ($new_phone, $new_name, $old_phone) ) or die( $link->errstr );
+        $link -> do( $query, undef, ($new_phone, $new_name, $old_phone) ) or die $link->errstr;
         $link -> disconnect;
         return ( {"Alert" => "The contact has been successfully modified"} );
     } 

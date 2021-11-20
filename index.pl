@@ -52,13 +52,15 @@ post '/search' => sub ($c) {
 post '/delete' => sub ($c) {
     my $candidat = $c->param( 'data' );
 
-    my $result = remove_contact($candidat);
+    my $search_result = search_uniq_contact($candidat);
     
-    if (exists $result->{'Alert'}) {
+    if (exists $search_result->{'Alert'}) {
         $c->render( template => 'alert',
-                    alert => $result->{'Alert'}, );
+                    alert => $search_result->{'Alert'}, );
     }
     else {
+        my ($phone, undef) = each %$search_result;
+        remove_contact($phone);
         $c->redirect_to( '/' );
     }
 };
@@ -66,17 +68,11 @@ post '/delete' => sub ($c) {
 get '/modify' => sub($c) {
     my $candidat = $c->param( 'data' );
     
-    my $search_result = search( $candidat );
+    my $search_result = search_uniq_contact( $candidat );
     # Поиск завершился ошибкой
     if (exists $search_result->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $search_result->{'Alert'}, );
-    }
-    # Поиск вернул более одного значения.
-    elsif (keys %$search_result > 1) {
-        $c->render( template => 'alert',
-                    alert => "A search of your pattern returned more than one value." 
-                              ." Please provide an identifier that is unique to the contact.", );
     }
     # Поиск вернул одно значение - можно редактировать.
     else {

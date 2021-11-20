@@ -44,7 +44,6 @@ post '/search' => sub ($c) {
         $c->render( template => 'alert',
                     alert => $contacts->{'Alert'}, );
     }
-    # Поиск завершился успешно
     else {
         $c->render( template => 'index',
                     rows => $contacts, );
@@ -56,7 +55,8 @@ post '/delete' => sub ($c) {
     my $candidat = $c->param( 'data' );
 
     my $result = remove_contact($candidat);
-
+    
+    # Удаление завершилось ошибкой
     if (exists $result->{'Alert'}){
         $c->render( template => 'alert',
                     alert => $result->{'Alert'}, );
@@ -66,6 +66,39 @@ post '/delete' => sub ($c) {
     }
 
     
+
+};
+
+get '/modify' => sub($c) {
+    my $candidat = $c->param( 'data' );
+    
+    my $search_result = search( $candidat );
+    # Поиск завершился ошибкой
+    if (exists $search_result->{'Alert'}){
+        $c->render( template => 'alert',
+                    alert => $search_result->{'Alert'}, );
+    }
+    elsif (keys %$search_result > 1) {
+        $c->render( template => 'alert',
+                    alert => "A search of your pattern returned more than one value." 
+                              ." Please provide an identifier that is unique to the contact.", );
+    }
+    else {
+        $c->render( template => 'modify',
+                    rows => $search_result, );
+    }
+};
+
+post '/modify' => sub($c) {
+    my $old_name = $c->param( 'old_name' );
+    my $new_name = $c->param( 'new_name' );
+    my $old_phone = $c->param( 'old_phone' );
+    my $new_phone = $c->param( 'new_phone' );
+
+    my $result = modify( $old_name, $new_name, $old_phone, $new_phone );
+
+    $c->render( template => 'alert',
+                alert => $result->{'Alert'}, );
 
 };
 

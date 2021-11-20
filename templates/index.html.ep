@@ -39,6 +39,17 @@
                 </div>
             </form>
         </td>
+         <td>
+            <form action="/modify" method="get">
+                <div>
+                    <input name="data" id="data" size="30">
+                </div>
+                <div>
+                    <button>modify</button>
+                </div>
+            </form>
+        </td>
+
 
     </tr>
 </table>

@@ -99,7 +99,7 @@ sub advanced_search {
             my $pattern_j = substr( $pattern_i, 0, $j ) . "\E.\Q" . substr( $pattern_i, $j+1 ); 
             my $basic_result = basic_search( $pattern_j, $all );
             while (my( $phone, $name ) = ( each %{ $basic_result } )) {
-                if (grep { /\Q$phone/ } ( keys %result )) {
+                if (not grep { /\Q$phone/ } ( keys %result )) {
                     $result{$phone} = $name;
                 }
             }
@@ -236,6 +236,24 @@ sub remove_contact {
 }
 
 sub modify {
-    #pass
+    my ($old_name, $new_name, $old_phone, $new_phone) = @_;
+
+    my $validate_result = validate_data($new_name,$new_phone);
+    if ($validate_result eq 0
+        || $validate_result->{'Alert'} eq "This number is already used"
+        && $old_phone eq $new_phone) {
+
+        my $query = "UPDATE `contacts` 
+                     SET `Phone` = ?, `Name` = ?
+                     WHERE `Phone` = ?";
+
+        my $link = create_connect();
+        $link -> do( $query, undef, ($new_phone, $new_name, $old_phone) ) or die( $link->errstr );
+        $link -> disconnect;
+        return ( {"Alert" => "The contact has been successfully modified"} );
+    } 
+    else {
+        return( $validate_result );    
+    }
 }
 

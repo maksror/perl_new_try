@@ -1,11 +1,13 @@
 use Modern::Perl;
 use DBI;
 use Data::Dumper;
+use Config::General;
 
-# Секция конфига подключения к БД
-my $DB = "task1";
-my $USER = "task1";
-my $PASS = "si7ughaehuoy7quaHahp";
+# Загружаем конфиг с атрибутами подключения к БД
+my %config = Config::General->new(
+-ConfigFile => "config.cfg",
+-InterPolateVars => 1,
+)->getall;
 
 #****ФУНКЦИИ****
 
@@ -14,10 +16,13 @@ my $PASS = "si7ughaehuoy7quaHahp";
 # Выходные данные: 
 #   Успешное подключение: линка с mysql подключением
 sub create_connect {
-    my $link = DBI -> connect( "DBI:mysql:database=$DB;", $USER, $PASS, {'RaiseError' => 0} ) 
+    my $link = DBI -> connect( "DBI:mysql:database=$config{DB};", 
+                                $config{USER}, $config{PASS}, 
+                                {"RaiseError" => 0, "mysql_enable_utf8" => 1,}) 
     # Если по какой либо причине подключение не удалось, то умираем. 
     # Конечному пользователю внутренние ошибки знать не нужно.
     or die $DBI::errstr;
+    
     # Если всё хорошо, то возвращаем линку
     return( $link );
 }
@@ -82,31 +87,35 @@ sub advanced_search {
     my %result;
 
     # Добавляем один любой символ в каждое место строки поиска
-    for my $i ( 0 .. $len ) {
+    for my $i ( 0..$len ) {
         my $pattern = substr( $search_string, 0, $i ). "\E.\Q". substr( $search_string, $i );
+        # Ищем по получившемуся паттерну
         my $basic_result = basic_search( $pattern, $all );
         while (my( $phone, $name ) = ( each %{ $basic_result } )) {
-            if (not grep { /\Q$phone/ } (keys %result)) {
+            # Добавляем только ранее не найденные контакты
+            if (not exists $result{$phone}) {
                 $result{$phone} = $name;
             }
         }
     }
 
-    # Меняем до 2 символов в строке поиска
+    # Меняем до 2 символов в строке поиска на любой
     for my $i ( 0..( $len - 1 ) ) {
-        my $pattern_i = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i+1 );
+        my $pattern = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i+1 );
         for my $j ( 0..( $len - 1 ) ) {
-            my $pattern_j = substr( $pattern_i, 0, $j ) . "\E.\Q" . substr( $pattern_i, $j+1 ); 
-            my $basic_result = basic_search( $pattern_j, $all );
+            $pattern = substr( $pattern, 0, $j ) . "\E.\Q" . substr( $pattern, $j+1 ); 
+            # Ищем по получившемуся паттерну
+            my $basic_result = basic_search( $pattern, $all );
             while (my( $phone, $name ) = ( each %{ $basic_result } )) {
-                if (not grep { /\Q$phone/ } ( keys %result )) {
+                # Добавляем только ранее не найденные контакты
+                if (not exists $result{$phone}) {
                     $result{$phone} = $name;
                 }
             }
         }
     }
 
-    return (\%result);
+    return( \%result );
 }
 
 # Обёртка для поиска. Тригерит сначала тривиальный поиск и если там пусто, то задействует расширенный.
@@ -134,10 +143,12 @@ sub search {
     if (!%$result) {
         $result = advanced_search( $search_string, $all );
     }
+
     # Если и расширенный поиск не дал результата, то добавляем оповещение
     if (!%$result) {
-        return( {'Alert' => "The search did not find any suitable contacts"} );
+        return( {"Alert" => "The search did not find any suitable contacts"} );
     }
+
     return( $result );
 }
 
@@ -150,12 +161,13 @@ sub show_all {
     my $link = create_connect();
 
     my $query = "SELECT * FROM `contacts`";
-    my $query_result = $link -> selectall_hashref( $query, 'Phone' ) or die $link->errstr;
+    my $query_result = $link -> selectall_hashref( $query, "Phone" ) or die $link->errstr;
     $link -> disconnect;
+
     # Превращаем полученные данные в удобные для обработки - хэш телефон=>Имя(телефон Primary Key в БД).
     my %result;
     for my $phone ( keys %$query_result ) {
-        $result{$phone} = $query_result->{$phone}->{'Name'};
+        $result{$phone} = $query_result->{$phone}->{"Name"};
     }
 
     return( \%result );
@@ -168,6 +180,7 @@ sub show_all {
 #   Неудачное добавление: ссылка на хэш "Alert"=>"Оповещение"
 sub add_contact {
     my ($name, $number) = @_;
+
     # Валидация данных на добавление
     my $is_valid = validate_data( $name, $number );
 
@@ -208,6 +221,7 @@ sub remove_contact {
     my $phone = shift;
 
     my $validate_result = validate_remove_condidat($phone);
+
     # Если валидация контакта прошла неудачно - отдаём полученное оповещение
     if ($validate_result ne 0) {
         return( {"Alert" => $validate_result} );
@@ -219,31 +233,30 @@ sub remove_contact {
     my $res = $link -> do( $query, undef, $phone ) or die $link->errstr;
     $link -> disconnect;
     if ($res eq "0E0"){
-        return( {"Alert" => "Phone number was not found"} );;    
+        return( {"Alert" => "Phone number was not found"} ); 
     }
-    return( {"Alert" => "Contact was successfully removed"} );
 
+    return( {"Alert" => "Contact was successfully removed"} );
 }
 
 sub modify {
     my ($old_name, $new_name, $old_phone, $new_phone) = @_;
 
     my $validate_result = validate_data($new_name,$new_phone);
-    if ($validate_result eq 0
-        || $validate_result->{'Alert'} eq "This number is already used"
-        && $old_phone eq $new_phone) {
-
+    if (
+        $validate_result eq 0
+        || $validate_result->{"Alert"} eq "This number is already used"
+        && $old_phone eq $new_phone
+    ) {
         my $query = "UPDATE `contacts` 
                      SET `Phone` = ?, `Name` = ?
                      WHERE `Phone` = ?";
-
         my $link = create_connect();
         $link -> do( $query, undef, ($new_phone, $new_name, $old_phone) ) or die $link->errstr;
         $link -> disconnect;
-        return ( {"Alert" => "The contact has been successfully modified"} );
+        return( {"Alert" => "The contact has been successfully modified"} );
     } 
     else {
         return( $validate_result );    
     }
 }
-

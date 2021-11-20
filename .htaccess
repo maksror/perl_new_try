@@ -1,4 +1,5 @@
 Options +ExecCGI
+
 AddHandler cgi-script .cgi .pl
 DirectoryIndex index.pl
 
@@ -7,3 +8,7 @@ DirectoryIndex index.pl
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^(.*)$ index.pl/$1 [QSA,L]
+
+
+ErrorDocument 500 /error.html
+ErrorDocument 404 /error.html

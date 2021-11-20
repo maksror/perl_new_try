@@ -31,7 +31,6 @@ post '/' => sub ($c) {
     else {
         $c->redirect_to( '/' );
     }
-
 };
 
 post '/search' => sub ($c) {
@@ -39,7 +38,6 @@ post '/search' => sub ($c) {
 
     my $contacts = search( $pattern );
     
-    # Поиск завершился ошибкой
     if (exists $contacts->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $contacts->{'Alert'}, );
@@ -56,7 +54,6 @@ post '/delete' => sub ($c) {
 
     my $result = remove_contact($candidat);
     
-    # Удаление завершилось ошибкой
     if (exists $result->{'Alert'}){
         $c->render( template => 'alert',
                     alert => $result->{'Alert'}, );
@@ -64,9 +61,6 @@ post '/delete' => sub ($c) {
     else {
         $c->redirect_to( '/' );
     }
-
-    
-
 };
 
 get '/modify' => sub($c) {
@@ -78,11 +72,13 @@ get '/modify' => sub($c) {
         $c->render( template => 'alert',
                     alert => $search_result->{'Alert'}, );
     }
+    # Поиск вернул более одного значения.
     elsif (keys %$search_result > 1) {
         $c->render( template => 'alert',
                     alert => "A search of your pattern returned more than one value." 
                               ." Please provide an identifier that is unique to the contact.", );
     }
+    # Поиск вернул одно значение - можно редактировать.
     else {
         $c->render( template => 'modify',
                     rows => $search_result, );
@@ -97,9 +93,9 @@ post '/modify' => sub($c) {
 
     my $result = modify( $old_name, $new_name, $old_phone, $new_phone );
 
+    # Возвращается всегда алерт(как при удачном редактировании так и при ошибке).
     $c->render( template => 'alert',
                 alert => $result->{'Alert'}, );
-
 };
 
 app->start;

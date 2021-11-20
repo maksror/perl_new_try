@@ -60,8 +60,10 @@ post '/delete' => sub ($c) {
     }
     else {
         my ($phone, undef) = each %$search_result;
-        remove_contact($phone);
-        $c->redirect_to( '/' );
+        my $remove_result = remove_contact($phone);
+        $c->render( template => 'alert',
+                    alert => $remove_result->{'Alert'}, );
+
     }
 };
 

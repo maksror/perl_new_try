@@ -1,0 +1,21 @@
+<HTML>
+<body>
+    % my ($phone, $name) = each %$rows;
+    <form action="/modify" method="post">
+        <div>
+            Name <input name="new_name" id="new_name" size="30" value = "<%= $name %>" >
+        </div>
+        <div>
+            Phone <input name="new_phone" id="new_phone" size="30" value = "<%= $phone %>" >
+        </div>
+        <div>
+            <input type="hidden" name="old_name" id="old_name" size="30" value = "<%= $name %>" >
+            <input type="hidden" name="old_phone" id="old_phone" size="30" value = "<%= $phone %>" >
+        </div>
+
+        <div>
+            <button>confirm</button>
+        </div>
+    </form>
+</body>
+</HTML>

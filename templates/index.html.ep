@@ -49,12 +49,15 @@
         <th>Name</th>
         <th>Phone number</th>
     </tr>
-    %for my $n (0..$len) {
+    % my $i = 1;
+    % my @sorted_hash_keys = sort { $rows->{$a} cmp $rows->{$b} or $a cmp $b } keys %$rows;
+    % for my $phone (@sorted_hash_keys) {
 	    <tr>
-            <td> <%= $n %> </td>
-            <td> <%= ${$rows}[$n][0] %> </td>
-            <td> <%= ${$rows}[$n][1] %> </td>
+            <td> <%= $i %> </td>
+            <td> <%= $rows->{$phone} %> </td>
+            <td> <%= $phone  %> </td>
         </tr>
+        % $i++;
     %}
 </table>
 

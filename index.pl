@@ -9,7 +9,7 @@ use mysql_operations;
 get '/' => sub ($c) {
     my $contacts = show_all ();
 
-    if (exists $contacts->{'Alert'}){
+    if (exists $contacts->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $contacts->{'Alert'}, );
     }
@@ -24,7 +24,7 @@ post '/' => sub ($c) {
                               $c->param ('phone'),
                             );
 
-    if (exists $result->{'Alert'}){
+    if (exists $result->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $result->{'Alert'}, );
     }
@@ -54,7 +54,7 @@ post '/delete' => sub ($c) {
 
     my $result = remove_contact($candidat);
     
-    if (exists $result->{'Alert'}){
+    if (exists $result->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $result->{'Alert'}, );
     }
@@ -68,7 +68,7 @@ get '/modify' => sub($c) {
     
     my $search_result = search( $candidat );
     # Поиск завершился ошибкой
-    if (exists $search_result->{'Alert'}){
+    if (exists $search_result->{'Alert'}) {
         $c->render( template => 'alert',
                     alert => $search_result->{'Alert'}, );
     }

@@ -33,19 +33,19 @@ sub create_connect {
 #   Успешная валидация: 0
 #   Проваленная валидация: хэш "Alert"=>"Оповещение"
 sub validate_data {
-    my ($name, $number) = @_;
+    my ($candidat_name, $candidat_phone) = @_;
 
     # Если ввели пустые данные, то ошибка
-    if (length $name == 0 or length $number == 0) {
+    if (length $candidat_name == 0 or length $candidat_phone == 0) {
         return( {"Alert" => "Empty values is not allowed"} );
     }
 
     # Если номер создержит что-то кроме символа "+" и цифр - тригерим ошибку
-    if ($number =~ m/^[\d\+]*$/) {
+    if ($candidat_phone =~ m/^[\d\+]*$/) {
         my $all = show_all();
         # Если такой номер уже существует
-        while (my ( $phone,$name ) = ( each %{ $all } )) {
-            if ($number eq $phone) {
+        while (my ( $existing_phone,undef ) = ( each %{ $all } )) {
+            if ($candidat_phone eq $existing_phone) {
                 return( {"Alert" => "This number is already used"} );
             }
         }
@@ -245,8 +245,8 @@ sub modify {
     my $validate_result = validate_data($new_name,$new_phone);
     if (
         $validate_result eq 0
-        || $validate_result->{"Alert"} eq "This number is already used"
-        && $old_phone eq $new_phone
+        || ( $validate_result->{"Alert"} eq "This number is already used"
+             && $old_phone eq $new_phone )
     ) {
         my $query = "UPDATE `contacts` 
                      SET `Phone` = ?, `Name` = ?

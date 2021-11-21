@@ -1,11 +1,13 @@
-use Modern::Perl;
 use DBI;
 use Data::Dumper;
 use Config::General;
+use File::Basename;
+use Modern::Perl;
 
+my $dir_name = dirname(__FILE__);
 # Загружаем конфиг с атрибутами подключения к БД
 my %config = Config::General->new(
--ConfigFile => "config.cfg",
+-ConfigFile => "$dir_name/config.cfg",
 -InterPolateVars => 1,
 )->getall;
 
@@ -44,7 +46,7 @@ sub validate_data {
     if ($candidat_phone =~ m/^[\d\+]*$/) {
         my $all = show_all();
         # Если такой номер уже существует
-        while (my ( $existing_phone,undef ) = ( each %{ $all } )) {
+        while (my ( $existing_phone, undef ) = ( each %{ $all } )) {
             if ($candidat_phone eq $existing_phone) {
                 return( {"Alert" => "This number is already used"} );
             }
@@ -58,6 +60,7 @@ sub validate_data {
 
 # Тривальный поиск по полному сопадению значений
 # Входные данные: строка поиска, ссылка на хэш с результатами show_all.
+# Проверка строки на возможность её использования в регулярке /^$pattern$/ лежит на вызывающей стороне
 # Выходные данные: 
 #   Удачный поиск: ссылка на хэш с парами "Телефон" => "Имя"
 #   Поиск завершился ошибкой: хэш "Alert"=>"Оповещение"
@@ -155,7 +158,7 @@ sub search {
 # Выборка всех данных из БД
 # Входные данные: нет
 # Выходные данные: 
-#   Успешное получение данных: массив массивов с парами [имя, телефон]
+#   Успешное получение данных: ссылка на хэш Телефон=>Имя
 sub show_all {
     my $link = create_connect();
 
@@ -175,8 +178,7 @@ sub show_all {
 # Добавление контакнта в БД
 # Входные данные: имя, номер
 # Выходные данные: 
-#   Удачное добавление: 0
-#   Неудачное добавление: ссылка на хэш "Alert"=>"Оповещение"
+#  Сыылка на хэш "Alert"=>"Результат"
 sub add_contact {
     my ($name, $number) = @_;
 
@@ -228,7 +230,7 @@ sub search_uniq_contact {
 # Перед удалением вызвать search_uniq_contact и использовать телефон из результата.
 # Входные данные: номер телефона
 # Выходные данные:
-#   Ссылка на хэш "Alert" => "Оповещение"
+#   Ссылка на хэш "Alert" => "Результат"
 sub remove_contact {
     my $removable_phone = shift;
 
@@ -245,6 +247,10 @@ sub remove_contact {
     return( {"Alert" => "Contact was successfully removed"} );
 }
 
+# Изменение контакта
+# Входные данные: старое/новое имя, старый/новый телефон
+# Выходные данные:
+# Ссылка на хэш "Alert" => "Результат"
 sub modify {
     my ($old_name, $new_name, $old_phone, $new_phone) = @_;
 

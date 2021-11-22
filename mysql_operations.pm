@@ -101,14 +101,13 @@ sub advanced_search {
             }
         }
     }
-
     # Меняем до 2 символов в строке поиска на любой
     for my $i ( 0..( $len - 1 ) ) {
-        my $pattern = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i+1 );
+        my $pattern_i = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i+1 );
         for my $j ( 0..( $len - 1 ) ) {
-            $pattern = substr( $pattern, 0, $j ) . "\E.\Q" . substr( $pattern, $j+1 ); 
+            my $pattern_j = substr( $pattern_i, 0, $j ) . "\E.\Q" . substr( $pattern_i, $j+1 ); 
             # Ищем по получившемуся паттерну
-            my $basic_result = basic_search( $pattern, $all );
+            my $basic_result = basic_search( $pattern_j, $all );
             while (my( $phone, $name ) = ( each %{ $basic_result } )) {
                 # Добавляем только ранее не найденные контакты
                 if (not exists $result{$phone}) {
@@ -117,7 +116,6 @@ sub advanced_search {
             }
         }
     }
-
     return( \%result );
 }
 

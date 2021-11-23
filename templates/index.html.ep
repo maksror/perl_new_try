@@ -7,7 +7,7 @@
             <a href="/">Main Page</a>
         </td>
         <td>
-            <form action="/" method="post">
+            <form action="/add" method="post">
                 <div>
                     Name <input name="name" id="name" size="30">
                 </div>

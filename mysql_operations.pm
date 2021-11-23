@@ -70,7 +70,7 @@ sub basic_search {
     my %result;
 
     while (my ( $phone,$name ) = ( each %{ $all } )) {
-        if (grep /^$pattern$/, ( $phone, $name )) {
+        if (grep /$pattern/, ( lc( $phone ), lc( $name ) )) {
             $result{$phone} = $name;
         }
     }
@@ -101,6 +101,7 @@ sub advanced_search {
             }
         }
     }
+
     # Меняем до 2 символов в строке поиска на любой
     for my $i ( 0..( $len - 1 ) ) {
         my $pattern_i = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i+1 );
@@ -134,8 +135,8 @@ sub search {
 
     my $all = show_all();
 
-    # Экранируем все спец символы в строке поиска.
-    $search_string = "\Q$search_string\E";
+    # Экранируем все спец символы в строке поиска и переводим её в нижний регистр.
+    $search_string = lc( "\Q$search_string\E" );
 
     # Производим поиск по полному совпадению со строкой
     my $result = basic_search( $search_string, $all );

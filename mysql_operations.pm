@@ -69,7 +69,7 @@ sub validate_data {
     }
 
     # Если номер создержит что-то кроме символа "+" и цифр - тригерим ошибку
-    if ( $candidat_phone =~ m/^[\d\+]*$/ ) {
+    if ( $candidat_phone =~ m/^\+?\d+$/ ) {
         my $all = show_all;
 
         # Проверка на существование такого телефона
@@ -235,8 +235,23 @@ sub search_uniq_contact {
     if ( exists $search_result->{ $candidat } ) {
         return { $candidat => $search_result->{ $candidat } };
     }
+    # Если кандидат полностью совпадает имени контакт[а|ов]
+    elsif ( grep /^$candidat$/, values %{ $search_result } ) {
+        my %uniq_result;
+        # Добавляем все контакты с таким именем в промежуточный хэш
+        for my $phone ( keys %{ $search_result } ){
+            if ( grep /^$candidat$/, $search_result->{ $phone } ) {
+                $uniq_result{ $phone } = $search_result->{ $phone };
+            }
+        }
+        # Если найден только один контакт с таким именем, то возвращаем его
+        if ( keys %uniq_result == 1 ) {
+            return \%uniq_result;
+        }
+    }
+
     # Если выборка вернула более одного результата
-    elsif ( keys %{ $search_result } > 1 ) {
+    if ( keys %{ $search_result } > 1 ) {
         return { alert => 'A search of your pattern returned more than one value.'
                           .' Please provide an identifier that is unique to the contact.'
         };

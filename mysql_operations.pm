@@ -40,7 +40,7 @@ sub show_all {
     my $link = create_connect;
 
     my $query        = 'SELECT * FROM `contacts`';
-    my $query_result = $link->selectall_hashref( $query, 'Phone' )
+    my $query_result = $link->selectall_hashref( $query, 'phone' )
         or die $link->errstr;
 
     $link->disconnect;
@@ -49,7 +49,7 @@ sub show_all {
     my %result;
 
     for my $phone ( keys %{ $query_result } ) {
-        $result{ $phone } = $query_result->{ $phone }->{Name};
+        $result{ $phone } = $query_result->{ $phone }->{name};
     }
 
     return \%result;
@@ -123,6 +123,7 @@ sub advanced_search {
     # Добавляем один любой символ в каждое место строки поиска
     for my $i ( 0 .. $len ) {
         my $pattern = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i );
+
         # Ищем по получившемуся паттерну
         my $basic_result = basic_search( $pattern, $all );
 
@@ -142,6 +143,7 @@ sub advanced_search {
         for my $j ( $i + 1 .. ( $len - 1 ) ) {
             # Меняем второй символ в строке поиска
             my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "\E.\Q" . substr( $pattern_with_one_change, $j + 1 );
+
             # Ищем по получившемуся паттерну
             my $basic_result = basic_search( $pattern_with_two_changes, $all );
 
@@ -153,6 +155,7 @@ sub advanced_search {
             }
         }
     }
+
     return \%result;
 }
 
@@ -178,12 +181,12 @@ sub search {
     my $result = basic_search( $search_string, $all );
 
     # Если полное совпадение не дало результатов, то производим расширенный поиск:
-    if ( !%$result ) {
+    if ( !%{ $result } ) {
         $result = advanced_search( $search_string, $all );
     }
 
     # Если и расширенный поиск не дал результата, то добавляем оповещение
-    if ( !%$result ) {
+    if ( !%{ $result } ) {
         return { alert => 'The search did not find any suitable contacts' };
     }
 
@@ -203,7 +206,7 @@ sub add_contact {
     if ( $is_valid eq 0 ) {
         my $link = create_connect;
 
-        my $query = 'INSERT INTO `contacts` (Name,Phone) VALUES (?,?)';
+        my $query = 'INSERT INTO `contacts` (name,phone) VALUES (?,?)';
 
         $link->do(
             $query,
@@ -238,12 +241,14 @@ sub search_uniq_contact {
     # Если кандидат полностью совпадает имени контакт[а|ов]
     elsif ( grep /^$candidat$/, values %{ $search_result } ) {
         my %uniq_result;
+
         # Добавляем все контакты с таким именем в промежуточный хэш
         for my $phone ( keys %{ $search_result } ){
             if ( grep /^$candidat$/, $search_result->{ $phone } ) {
                 $uniq_result{ $phone } = $search_result->{ $phone };
             }
         }
+
         # Если найден только один контакт с таким именем, то возвращаем его
         if ( keys %uniq_result == 1 ) {
             return \%uniq_result;
@@ -274,8 +279,8 @@ sub remove_contact {
 
     my $link = create_connect;
 
-    my $query = 'DELETE FROM `contacts` WHERE `Phone` = ?';
-    my $res = $link->do(
+    my $query = 'DELETE FROM `contacts` WHERE `phone` = ?';
+    my $res   = $link->do(
         $query,
         undef,
         $removable_phone,
@@ -305,14 +310,14 @@ sub modify_contact {
     if (
         $validate_result eq 0
         || (
-            $validate_result->{ alert } eq 'This number is already used'
+            $validate_result->{alert} eq 'This number is already used'
             && $old_phone eq $new_phone
         )
     ) {
         my $query = q/
             UPDATE `contacts`
-               SET `Phone` = ?, `Name` = ?
-             WHERE `Phone` = ?
+               SET `phone` = ?, `name` = ?
+             WHERE `phone` = ?
         /;
 
         my $link = create_connect;

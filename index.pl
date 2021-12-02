@@ -13,7 +13,7 @@ get '/' => sub ($c) {
     if ( exists $contacts->{alert} ) {
         $c->render(
             template => 'alert',
-            alert => $contacts->{alert},
+            alert    => $contacts->{alert},
         );
     }
     else {
@@ -26,10 +26,10 @@ get '/' => sub ($c) {
 
 # Добавление контакта
 post '/add' => sub ($c) {
-    my $result = add_contact(
-        $c->param( 'name'  ),
-        $c->param( 'phone' ),
-    );
+    my $phone = $c->param( 'phone' );
+    my $name  = $c->param( 'name'  );
+
+    my $result = add_contact( $name, $phone );
 
     # Возвращается всегда аллетр, поэтому задействуем только этот шаблон
     $c->render(
@@ -118,7 +118,7 @@ post '/modify' => sub($c) {
         $old_name,
         $new_name,
         $old_phone,
-        $new_phone
+        $new_phone,
     );
 
     # Возвращается всегда алерт(как при удачном редактировании так и при ошибке).

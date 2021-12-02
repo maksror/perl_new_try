@@ -122,7 +122,7 @@ sub advanced_search {
 
     # Добавляем один любой символ в каждое место строки поиска
     for my $i ( 0 .. $len ) {
-        my $pattern = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i );
+        my $pattern = substr( $search_string, 0, $i ) . "." . substr( $search_string, $i );
 
         # Ищем по получившемуся паттерну
         my $basic_result = basic_search( $pattern, $all );
@@ -138,11 +138,11 @@ sub advanced_search {
     # Меняем до 2 символов в строке поиска на любой
     for my $i ( 0 .. ( $len - 1 ) ) {
         # Заменяем один символ в строке поиска
-        my $pattern_with_one_change = substr( $search_string, 0, $i ) . "\E.\Q" . substr( $search_string, $i + 1 );
+        my $pattern_with_one_change = substr( $search_string, 0, $i ) . "." . substr( $search_string, $i + 1 );
         # Обходим все символы СПРАВА(что бы не повторять паттерны) от позиции $i для замены
-        for my $j ( $i + 1 .. ( $len - 1 ) ) {
+        for my $j ( ( $i + 1 ) .. ( $len - 1 ) ) {
             # Меняем второй символ в строке поиска
-            my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "\E.\Q" . substr( $pattern_with_one_change, $j + 1 );
+            my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "." . substr( $pattern_with_one_change, $j + 1 );
 
             # Ищем по получившемуся паттерну
             my $basic_result = basic_search( $pattern_with_two_changes, $all );
@@ -250,13 +250,13 @@ sub search_uniq_contact {
         }
 
         # Если найден только один контакт с таким именем, то возвращаем его
-        if ( keys %uniq_result == 1 ) {
+        if ( %uniq_result == 1 ) {
             return \%uniq_result;
         }
     }
 
     # Если выборка вернула более одного результата
-    if ( keys %{ $search_result } > 1 ) {
+    if ( %{ $search_result } > 1 ) {
         return { alert => 'A search of your pattern returned more than one value.'
                           .' Please provide an identifier that is unique to the contact.'
         };
@@ -314,14 +314,14 @@ sub modify_contact {
             && $old_phone eq $new_phone
         )
     ) {
+        my $link = create_connect;
+
         my $query = q/
             UPDATE `contacts`
                SET `phone` = ?, `name` = ?
              WHERE `phone` = ?
         /;
-
-        my $link = create_connect;
-
+        
         $link->do(
                  $query,
                  undef,

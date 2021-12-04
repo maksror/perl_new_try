@@ -3,7 +3,7 @@ use Test::utf8;
 use Modern::Perl;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing advanced_search function
 
@@ -27,7 +27,7 @@ describe "Передаём в фукнцию паттерн 'ab':" => sub {
             '..',
         );
 
-        mysql_operations->expects( 'basic_search' )->returns( sub {
+        PhoneBook->expects( 'basic_search' )->returns( sub {
                 my ( $pattern, undef ) = @_;
 
                 ok(
@@ -38,7 +38,7 @@ describe "Передаём в фукнцию паттерн 'ab':" => sub {
                 return { 123 => '123' };
         } )->exactly( 6 );
 
-        my $actual = mysql_operations::advanced_search( $pattern, \%fake_show_all_result );
+        my $actual = PhoneBook::advanced_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };

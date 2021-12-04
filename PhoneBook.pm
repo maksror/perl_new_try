@@ -1,4 +1,4 @@
-package mysql_operations;
+package PhoneBook;
 
 use DBI;
 use Data::Dumper;

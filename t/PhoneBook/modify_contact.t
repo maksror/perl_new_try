@@ -4,7 +4,7 @@ use Modern::Perl;
 use Test::Exception;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing modify_contact function
 
@@ -16,7 +16,7 @@ describe "Передаём в функцию валидные данные :" =>
         my $new_phone = '333';
         my $expect    = { alert => 'The contact has been successfully modified' };
 
-        mysql_operations->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 0 );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
@@ -47,9 +47,9 @@ describe "Передаём в функцию валидные данные :" =>
             return 1;
         } );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = mysql_operations::modify_contact(
+        my $actual = PhoneBook::modify_contact(
             $old_name,
             $new_name,
             $old_phone,
@@ -68,15 +68,15 @@ describe "Передаём в функцию валидные данные :" =>
         my $new_phone = '123';
         my $expect    = { alert => 'The contact has been successfully modified' };
 
-        mysql_operations->expects( 'validate_data' )->returns( { alert => 'This number is already used' } );
+        PhoneBook->expects( 'validate_data' )->returns( { alert => 'This number is already used' } );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( 1 );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = mysql_operations::modify_contact(
+        my $actual = PhoneBook::modify_contact(
             $old_name,
             $new_name,
             $old_phone,
@@ -95,9 +95,9 @@ describe "Передаём в функцию не валидные данные 
         my $new_phone = '333';
         my $expect    = { alert => 'some_error_text' };
 
-        mysql_operations->expects( 'validate_data' )->returns( $expect );
+        PhoneBook->expects( 'validate_data' )->returns( $expect );
 
-        my $actual = mysql_operations::modify_contact(
+        my $actual = PhoneBook::modify_contact(
             $old_name,
             $new_name,
             $old_phone,
@@ -117,15 +117,15 @@ describe "Передаём в функцию не валидые данные, �
         my $new_phone = '';
 
 
-        mysql_operations->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 0 );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'do' )        ->returns( 0 );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         dies_ok( sub {
-            mysql_operations::modify_contact(
+            PhoneBook::modify_contact(
             $old_name,
             $new_name,
             $old_phone,

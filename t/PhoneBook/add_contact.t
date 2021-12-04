@@ -4,7 +4,7 @@ use Modern::Perl;
 use Test::Exception;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing add_contact function
 
@@ -14,7 +14,7 @@ describe "Передаём в функцию валидные данные :" =>
         my $phone  = '123';
         my $expect = { alert => 'Contact was successfully added' };
 
-        mysql_operations->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 0 );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
@@ -30,9 +30,9 @@ describe "Передаём в функцию валидные данные :" =>
             return 1;
         } );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = mysql_operations::add_contact( $name, $phone );
+        my $actual = PhoneBook::add_contact( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -44,9 +44,9 @@ describe "Передаём в функцию не валидные данные 
         my $phone  = '';
         my $expect = { alert => 'some_error_text' };
 
-        mysql_operations->expects( 'validate_data' )->returns( $expect );
+        PhoneBook->expects( 'validate_data' )->returns( $expect );
 
-        my $actual = mysql_operations::add_contact( $name, $phone );
+        my $actual = PhoneBook::add_contact( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -57,16 +57,16 @@ describe "Передаём в функцию не валидные данные,
         my $name   = 'test';
         my $phone  = '123';
 
-        mysql_operations->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 0 );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'do' )    ->returns( 0 );
         $fake_mysql_link->expects( 'errstr' )->returns( 0 );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         dies_ok( sub {
-            mysql_operations::add_contact( $name, $phone );
+            PhoneBook::add_contact( $name, $phone );
         } );
     };
 };

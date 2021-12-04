@@ -3,7 +3,7 @@ use Test::utf8;
 use Modern::Perl;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing show_all function
 
@@ -20,7 +20,7 @@ describe "Выборка данных из БД" => sub {
         $fake_mysql_link->expects( 'selectall_hashref' )->returns( \%fake_select_result );
         $fake_mysql_link->expects( 'disconnect' )       ->returns( 0 );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         my %expect = (
             +711111 => 'test1',
@@ -28,7 +28,7 @@ describe "Выборка данных из БД" => sub {
             123456  => 'TEST',
         );
 
-        my $actual = mysql_operations::show_all;
+        my $actual = PhoneBook::show_all;
 
         is_deeply( $actual , \%expect );
     };

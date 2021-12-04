@@ -4,7 +4,7 @@ use Modern::Perl;
 use Test::Exception;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing remove_contact function
 
@@ -26,9 +26,9 @@ describe "Передаём в функцию валидные данные :" =>
             return 1;
         } );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = mysql_operations::remove_contact( $phone );
+        my $actual = PhoneBook::remove_contact( $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -42,10 +42,10 @@ describe "Передаём в функцию не валидные данные,
         $fake_mysql_link->expects( 'do' )        ->returns( 0 );
         $fake_mysql_link->expects( 'errstr' )    ->returns( 0 );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         dies_ok( sub {
-            mysql_operations::remove_contact( $phone );
+            PhoneBook::remove_contact( $phone );
         } );
     };
 };
@@ -59,9 +59,9 @@ describe "Передаём в функцию не валидный телефо�
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( "0E0" );
 
-        mysql_operations->expects( 'create_connect' )->returns( $fake_mysql_link );
+        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = mysql_operations::remove_contact( $phone );
+        my $actual = PhoneBook::remove_contact( $phone );
 
         is_deeply( $actual, $expect );
     };

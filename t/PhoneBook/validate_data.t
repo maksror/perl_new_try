@@ -3,7 +3,7 @@ use Test::utf8;
 use Modern::Perl;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing validate_data function
 
@@ -16,9 +16,9 @@ describe "Передаём в фукнцию данные name = 'test', phone =
 
         # Эмитация возврата хэша из show_all
         my %empty_hash;
-        mysql_operations->expects( 'show_all' )->returns( \%empty_hash );
+        PhoneBook->expects( 'show_all' )->returns( \%empty_hash );
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -32,9 +32,9 @@ describe "Передаём в фукнцию данные name = 'test', phone =
 
         # Эмитация возврата хэша из show_all
         my %empty_hash;
-        mysql_operations->expects( 'show_all' )->returns( \%empty_hash );
+        PhoneBook->expects( 'show_all' )->returns( \%empty_hash );
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -47,7 +47,7 @@ describe "Передаём в фукнцию данные name = '', phone = '+1
         my $phone  = '+123';
         my $expect = { alert => 'Empty values is not allowed' };
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -59,7 +59,7 @@ describe "Передаём в фукнцию данные name = 'test', phone =
         my $phone  = '';
         my $expect = { alert => 'Empty values is not allowed' };
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -71,7 +71,7 @@ describe "Передаём в фукнцию данные name = 'test', phone =
         my $phone  = 'test';
         my $expect = { alert => 'Invalid phone number' };
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -83,7 +83,7 @@ describe "Передаём в фукнцию данные name = 'test', phone =
         my $phone  = '123+123';
         my $expect = { alert => 'Invalid phone number' };
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -95,7 +95,7 @@ describe "Передаём в фукнцию данные name = 'test', phone =
         my $phone  = '-123';
         my $expect = { alert => 'Invalid phone number' };
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };
@@ -109,9 +109,9 @@ describe "Передаём в фукнцию данные name = 'test', phone =
 
         # Эмитация возврата хэша из show_all
         my %fake_select_result = ( '+123' => 'test' );
-        mysql_operations->expects( 'show_all' )->returns( \%fake_select_result );
+        PhoneBook->expects( 'show_all' )->returns( \%fake_select_result );
 
-        my $actual = mysql_operations::validate_data( $name, $phone );
+        my $actual = PhoneBook::validate_data( $name, $phone );
 
         is_deeply( $actual, $expect );
     };

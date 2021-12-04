@@ -3,7 +3,7 @@ use Test::utf8;
 use Modern::Perl;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing search_uniq_contact function
 
@@ -17,9 +17,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = '123';
         my $expect  = { 123 => 'test' };
 
-        mysql_operations->expects( 'search' )->returns( { 123 => 'test', 333 => 'test' } );
+        PhoneBook->expects( 'search' )->returns( { 123 => 'test', 333 => 'test' } );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };
@@ -30,9 +30,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = 'test';
         my $expect  = { 123 => 'test' };
 
-        mysql_operations->expects( 'search' )->returns( { 123 => 'test', 333 => 'test123' } );
+        PhoneBook->expects( 'search' )->returns( { 123 => 'test', 333 => 'test123' } );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };
@@ -43,9 +43,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = 'test';
         my $expect  = { 123 => 'test123' };
 
-        mysql_operations->expects( 'search' )->returns( { 123 => 'test123' } );
+        PhoneBook->expects( 'search' )->returns( { 123 => 'test123' } );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };
@@ -56,9 +56,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = 'test';
         my $expect  = $fail_allert;
 
-        mysql_operations->expects( 'search' )->returns( { 123 => 'test', 333 => 'test' } );
+        PhoneBook->expects( 'search' )->returns( { 123 => 'test', 333 => 'test' } );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };
@@ -69,9 +69,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = 'test';
         my $expect  = $fail_allert;
 
-        mysql_operations->expects( 'search' )->returns( { 123 => 'test1', 333 => 'test1' } );
+        PhoneBook->expects( 'search' )->returns( { 123 => 'test1', 333 => 'test1' } );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };
@@ -82,9 +82,9 @@ describe "Передаём в функцию сущствующий паттер
         my $pattern = 'test';
         my $expect  = { alert => 'some_error_text' };
 
-        mysql_operations->expects( 'search' )->returns( $expect );
+        PhoneBook->expects( 'search' )->returns( $expect );
 
-        my $actual = mysql_operations::search_uniq_contact( $pattern );
+        my $actual = PhoneBook::search_uniq_contact( $pattern );
 
         is_deeply( $actual, $expect );
     };

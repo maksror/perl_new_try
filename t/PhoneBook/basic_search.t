@@ -3,7 +3,7 @@ use Test::utf8;
 use Modern::Perl;
 
 use lib "../../";
-use mysql_operations qw( :ALL );
+use PhoneBook qw( :ALL );
 
 # Testing basic_search function
 
@@ -16,7 +16,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = 'test';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -31,7 +31,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = '123';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -46,7 +46,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = 'test';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -61,7 +61,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = 'test';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -77,7 +77,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = '123';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -92,7 +92,7 @@ describe "Передаём в фукнцию существующий патте
         my $pattern = 'test';
         my $expect  = \%fake_show_all_result;
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };
@@ -107,7 +107,7 @@ describe "Передаём в фукнцию несуществующий пат
         my $pattern = 'test';
         my $expect  = {};
 
-        my $actual  = mysql_operations::basic_search( $pattern, \%fake_show_all_result );
+        my $actual  = PhoneBook::basic_search( $pattern, \%fake_show_all_result );
 
         is_deeply( $actual, $expect );
     };

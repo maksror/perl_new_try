@@ -21,7 +21,7 @@ describe "Передаём в функцию валидные данные :" =>
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( sub {
-        	my ( undef,
+            my ( undef,
                 $actual_query,
                 undef,
                 $actual_new_phone,
@@ -29,7 +29,7 @@ describe "Передаём в функцию валидные данные :" =>
                 $actual_old_phone,
             ) = @_;
 
-        	my $expected_query = q/
+            my $expected_query = q/
                 UPDATE `contacts`
                    SET `phone` = ?, `name` = ?
                  WHERE `phone` = ?
@@ -39,8 +39,8 @@ describe "Передаём в функцию валидные данные :" =>
             $actual_query   =~ s/\h+/ /g;
             $expected_query =~ s/\h+/ /g;
 
-        	is( $actual_query,     $expected_query, "Правильный шаблон запроса"           );
-        	is( $actual_new_phone, $new_phone,      "Правильный новый телефон в запросе"  );
+            is( $actual_query,     $expected_query, "Правильный шаблон запроса"           );
+            is( $actual_new_phone, $new_phone,      "Правильный новый телефон в запросе"  );
             is( $actual_new_name,  $new_name,       "Правильное новое имя в запросе"      );
             is( $actual_old_phone, $old_phone,      "Правильный старый телефон в запросе" );
 

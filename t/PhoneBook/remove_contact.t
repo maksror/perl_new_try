@@ -16,12 +16,12 @@ describe "Передаём в функцию валидные данные :" =>
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( sub {
-        	my ( undef, $actual_query, undef, $actual_phone ) = @_;
+            my ( undef, $actual_query, undef, $actual_phone ) = @_;
 
-        	my $expected_query = 'DELETE FROM `contacts` WHERE `phone` = ?';
+            my $expected_query = 'DELETE FROM `contacts` WHERE `phone` = ?';
 
-        	is( $actual_query, $expected_query, "Правильный шаблон запроса"    );
-        	is( $actual_phone, $phone,          "Правильный телефон в запросе" );
+            is( $actual_query, $expected_query, "Правильный шаблон запроса"    );
+            is( $actual_phone, $phone,          "Правильный телефон в запросе" );
 
             return 1;
         } );

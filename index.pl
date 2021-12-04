@@ -4,7 +4,7 @@ use Modern::Perl;
 use Mojolicious::Lite -signatures;
 
 use lib "./";
-use mysql_operations;
+use PhoneBook;
 
 # Отрисовка главной страницы
 get '/' => sub ($c) {

@@ -1,8 +1,30 @@
+package mysql_operations;
+
 use DBI;
 use Data::Dumper;
 use Config::General;
 use File::Basename;
 use Modern::Perl;
+
+# объявление экспорта
+use base 'Exporter';
+our @EXPORT = qw(
+    modify_contact
+    remove_contact
+    add_contact
+    search_uniq_contact
+    search
+    show_all
+);
+our @EXPORT_OK = qw(
+    create_connect
+    validate_data
+    basic_search
+    advanced_search
+);
+our %EXPORT_TAGS = (
+    ALL => [ @EXPORT, @EXPORT_OK ],
+);
 
 my $dir_name = dirname(__FILE__);
 # Загружаем конфиг с атрибутами подключения к БД
@@ -58,8 +80,8 @@ sub show_all {
 # Проверка имени и номера
 # Входные данные: имя, номер
 # Выходные данные:
-#   Успешная валидация:
-#   П0роваленная валидация: хэш alert=>"Оповещение"
+#   Успешная валидация: 0
+#   Проваленная валидация: хэш alert=>"Оповещение"
 sub validate_data {
     my ( $candidat_name, $candidat_phone ) = @_;
 
@@ -88,7 +110,7 @@ sub validate_data {
 
 # Тривальный поиск по полному сопадению значений
 # Входные данные: строка поиска, ссылка на хэш с результатами show_all.
-# Проверка строки на возможность её использования в регулярке /^$pattern$/ лежит на вызывающей стороне
+# Проверка строки на возможность её использования в регулярке /$pattern/ лежит на вызывающей стороне
 # Выходные данные:
 #   Удачный поиск: ссылка на хэш с парами "Телефон" => "Имя"
 #   Поиск завершился ошибкой: хэш alert=>"Оповещение"
@@ -127,7 +149,7 @@ sub advanced_search {
         # Ищем по получившемуся паттерну
         my $basic_result = basic_search( $pattern, $all );
 
-        # Добавляем только ранее не найденные контакты
+        # Добавляем только ранее не найденные контакты(что бы не создавать линки на элементы хэша)
         for my $phone ( keys %{ $basic_result } ) {
             if ( not exists $result{ $phone } ) {
                 $result{ $phone } = $basic_result->{ $phone };
@@ -140,14 +162,14 @@ sub advanced_search {
         # Заменяем один символ в строке поиска
         my $pattern_with_one_change = substr( $search_string, 0, $i ) . "." . substr( $search_string, $i + 1 );
         # Обходим все символы СПРАВА(что бы не повторять паттерны) от позиции $i для замены
-        for my $j ( ( $i + 1 ) .. ( $len - 1 ) ) {
+        for my $j ( $i .. ( $len - 1 ) ) {
             # Меняем второй символ в строке поиска
             my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "." . substr( $pattern_with_one_change, $j + 1 );
 
             # Ищем по получившемуся паттерну
             my $basic_result = basic_search( $pattern_with_two_changes, $all );
 
-            # Добавляем только ранее не найденные контакты
+            # Добавляем только ранее не найденные контакты(что бы не создавать линки на элементы хэша)
             for my $phone ( keys %{ $basic_result } ) {
                 if ( not exists $result{ $phone } ) {
                     $result{ $phone } = $basic_result->{ $phone };
@@ -321,7 +343,7 @@ sub modify_contact {
                SET `phone` = ?, `name` = ?
              WHERE `phone` = ?
         /;
-        
+
         $link->do(
                  $query,
                  undef,

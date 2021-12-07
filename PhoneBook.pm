@@ -1,45 +1,16 @@
 package PhoneBook;
 
-use DBI;
-use Data::Dumper;
-use Config::General;
-use File::Basename;
+use lib "./";
 use Modern::Perl;
-
-my $dir_name = dirname(__FILE__);
-# Загружаем конфиг с атрибутами подключения к БД
-my %config = Config::General->new(
-    -ConfigFile      => "$dir_name/config.cfg",
-    -InterPolateVars => 1,
-)->getall;
-
-#****ФУНКЦИИ****
-
-# Подключение к БД
-# Входные данные: нет
-# Выходные данные:
-#   Успешное подключение: линка с mysql подключением
-sub create_connect {
-    my $db_link = DBI->connect(
-        "DBI:mysql:database=$config{DB};",
-        $config{USER},
-        $config{PASS},
-        {
-            'RaiseError'        => 0,
-            'mysql_enable_utf8' => 1,
-        },
-    ) or die $DBI::errstr;
-
-    # Если всё хорошо, то возвращаем линку
-    return $db_link;
-}
+use MysqlConnect;
+use Data::Dumper;
 
 # Выборка всех данных из БД
 # Входные данные: нет
 # Выходные данные:
 #   Успешное получение данных: ссылка на хэш Телефон=>Имя
 sub show_all {
-    my $db_link = create_connect;
+    my $db_link = MysqlConnect::create_connect;
 
     my $query        = 'SELECT * FROM `contacts`';
     my $query_result = $db_link->selectall_hashref( $query, 'phone' )
@@ -237,7 +208,7 @@ sub add_contact {
     my $is_valid = validate_data( $name, $number );
 
     if ( $is_valid eq 1 ) {
-        my $db_link = create_connect;
+        my $db_link = MysqlConnect::create_connect;
 
         my $query = 'INSERT INTO `contacts` (name,phone) VALUES (?,?)';
 
@@ -304,7 +275,7 @@ sub search_by_full_match {
 sub remove_contact {
     my ( $removable_phone ) = @_;
 
-    my $db_link = create_connect;
+    my $db_link = MysqlConnect::create_connect;
 
     my $query = 'DELETE FROM `contacts` WHERE `phone` = ?';
     my $res   = $db_link->do(
@@ -350,7 +321,7 @@ sub modify_contact {
             && $old_phone eq $new_phone
         )
     ) {
-        my $db_link = create_connect;
+        my $db_link = MysqlConnect::create_connect;
 
         my $query = q/
             UPDATE `contacts`

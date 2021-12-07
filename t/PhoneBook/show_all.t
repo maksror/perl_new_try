@@ -20,7 +20,7 @@ describe "Выборка данных из БД" => sub {
         $fake_mysql_link->expects( 'selectall_hashref' )->returns( \%fake_select_result );
         $fake_mysql_link->expects( 'disconnect' )       ->returns( 0 );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         my %expect = (
             +711111 => 'test1',

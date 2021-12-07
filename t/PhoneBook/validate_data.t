@@ -9,10 +9,10 @@ use PhoneBook qw( :ALL );
 
 # Тесты на успешную валидацию
 describe "Передаём в фукнцию данные name = 'test', phone = '123':" => sub {
-    it "должна вренуть 0" => sub {
+    it "должна вренуть 1" => sub {
         my $name   = 'test';
         my $phone  = '123';
-        my $expect = 0;
+        my $expect = 1;
 
         # Эмитация возврата хэша из show_all
         my %empty_hash;
@@ -25,10 +25,10 @@ describe "Передаём в фукнцию данные name = 'test', phone =
 };
 
 describe "Передаём в фукнцию данные name = 'test', phone = '+123':" => sub {
-    it "должна вренуть 0" => sub {
+    it "должна вренуть 1" => sub {
         my $name   = 'test';
         my $phone  = '+123';
-        my $expect = 0;
+        my $expect = 1;
 
         # Эмитация возврата хэша из show_all
         my %empty_hash;

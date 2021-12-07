@@ -26,7 +26,7 @@ describe "Передаём в функцию валидные данные :" =>
             return 1;
         } );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         my $actual = PhoneBook::remove_contact( $phone );
 
@@ -39,10 +39,10 @@ describe "Передаём в функцию не валидные данные,
         my $phone  = '123';
 
         my $fake_mysql_link = mock();
-        $fake_mysql_link->expects( 'do' )        ->returns( 0 );
-        $fake_mysql_link->expects( 'errstr' )    ->returns( 0 );
+        $fake_mysql_link->expects( 'do' )    ->returns( 0 );
+        $fake_mysql_link->expects( 'errstr' )->returns( 0 );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         dies_ok( sub {
             PhoneBook::remove_contact( $phone );
@@ -59,7 +59,7 @@ describe "Передаём в функцию не валидный телефо�
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( "0E0" );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         my $actual = PhoneBook::remove_contact( $phone );
 

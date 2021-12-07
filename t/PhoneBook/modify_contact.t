@@ -10,13 +10,15 @@ use PhoneBook qw( :ALL );
 
 describe "Передаём в функцию валидные данные :" => sub {
     it "проверяем корректность передачи данных в mysql" => sub {
-        my $old_name  = 'test';
-        my $new_name  = 'test';
-        my $old_phone = '123';
-        my $new_phone = '333';
+        my %test_data = (
+            old_name  => 'test',
+            new_name  => 'test',
+            old_phone => '123',
+            new_phone => '333',
+        );
         my $expect    = { alert => 'The contact has been successfully modified' };
 
-        PhoneBook->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 1 );
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
@@ -39,22 +41,17 @@ describe "Передаём в функцию валидные данные :" =>
             $actual_query   =~ s/\h+/ /g;
             $expected_query =~ s/\h+/ /g;
 
-            is( $actual_query,     $expected_query, "Правильный шаблон запроса"           );
-            is( $actual_new_phone, $new_phone,      "Правильный новый телефон в запросе"  );
-            is( $actual_new_name,  $new_name,       "Правильное новое имя в запросе"      );
-            is( $actual_old_phone, $old_phone,      "Правильный старый телефон в запросе" );
+            is( $actual_query,     $expected_query,       "Правильный шаблон запроса"           );
+            is( $actual_new_phone, $test_data{new_phone}, "Правильный новый телефон в запросе"  );
+            is( $actual_new_name,  $test_data{new_name} , "Правильное новое имя в запросе"      );
+            is( $actual_old_phone, $test_data{old_phone}, "Правильный старый телефон в запросе" );
 
             return 1;
         } );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = PhoneBook::modify_contact(
-            $old_name,
-            $new_name,
-            $old_phone,
-            $new_phone,
-        );
+        my $actual = PhoneBook::modify_contact(%test_data);
 
         is_deeply( $actual, $expect );
     };
@@ -62,10 +59,12 @@ describe "Передаём в функцию валидные данные :" =>
 
 describe "Передаём в функцию валидные данные :" => sub {
     it "Проверка на условие 'старый номер' = 'новый номер' и ошибки 'This number is already used'" => sub {
-        my $old_name  = 'test';
-        my $new_name  = 'test';
-        my $old_phone = '123';
-        my $new_phone = '123';
+        my %test_data = (
+            old_name  => 'test',
+            new_name  => 'test',
+            old_phone => '123',
+            new_phone => '123',
+        );
         my $expect    = { alert => 'The contact has been successfully modified' };
 
         PhoneBook->expects( 'validate_data' )->returns( { alert => 'This number is already used' } );
@@ -74,14 +73,9 @@ describe "Передаём в функцию валидные данные :" =>
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
         $fake_mysql_link->expects( 'do' )        ->returns( 1 );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
-        my $actual = PhoneBook::modify_contact(
-            $old_name,
-            $new_name,
-            $old_phone,
-            $new_phone,
-        );
+        my $actual = PhoneBook::modify_contact(%test_data);
 
         is_deeply( $actual, $expect );
     };
@@ -89,20 +83,17 @@ describe "Передаём в функцию валидные данные :" =>
 
 describe "Передаём в функцию не валидные данные :" => sub {
     it "должна вернуться ошибка валидации" => sub {
-        my $old_name  = 'test';
-        my $new_name  = '';
-        my $old_phone = '123';
-        my $new_phone = '333';
+        my %test_data = (
+            old_name  => 'test',
+            new_name  => '',
+            old_phone => '123',
+            new_phone => '123',
+        );
         my $expect    = { alert => 'some_error_text' };
 
         PhoneBook->expects( 'validate_data' )->returns( $expect );
 
-        my $actual = PhoneBook::modify_contact(
-            $old_name,
-            $new_name,
-            $old_phone,
-            $new_phone,
-        );
+        my $actual = PhoneBook::modify_contact(%test_data);
 
         is_deeply( $actual, $expect );
     };
@@ -111,26 +102,22 @@ describe "Передаём в функцию не валидные данные 
 
 describe "Передаём в функцию не валидые данные, которые положат запрос в мускуль:" => sub {
     it "функция должна умереть" => sub {
-        my $old_name  = '';
-        my $new_name  = '';
-        my $old_phone = '';
-        my $new_phone = '';
+        my %test_data = (
+            old_name  => '',
+            new_name  => '',
+            old_phone => '',
+            new_phone => '',
+        );
 
-
-        PhoneBook->expects( 'validate_data' )->returns( 0 );
+        PhoneBook->expects( 'validate_data' )->returns( 1 );
 
         my $fake_mysql_link = mock();
-        $fake_mysql_link->expects( 'do' )        ->returns( 0 );
+        $fake_mysql_link->expects( 'do' )->returns( 0 );
 
-        PhoneBook->expects( 'create_connect' )->returns( $fake_mysql_link );
+        MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 
         dies_ok( sub {
-            PhoneBook::modify_contact(
-            $old_name,
-            $new_name,
-            $old_phone,
-            $new_phone,
-            );
+            PhoneBook::modify_contact(%test_data);
         } );
     };
 };

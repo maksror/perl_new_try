@@ -105,7 +105,7 @@ describe "Передаём в фукнцию данные name = 'test', phone =
     it "должна вернуть аллерт(телефон уже есть в БД)" => sub {
         my $name   = 'test';
         my $phone  = '+123';
-        my $expect = { alert => 'This number is already used' };
+        my $expect = { alert => 'This number is already in use' };
 
         # Эмитация возврата хэша из show_all
         my %fake_select_result = ( '+123' => 'test' );

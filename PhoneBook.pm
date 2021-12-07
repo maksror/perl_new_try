@@ -8,7 +8,7 @@ use Data::Dumper;
 # Выборка всех данных из БД
 # Входные данные: нет
 # Выходные данные:
-#   Успешное получение данных: ссылка на хэш Телефон=>Имя
+#   ссылка на хэш Телефон=>Имя
 sub show_all {
     my $db_link = MysqlConnect::create_connect;
 
@@ -48,10 +48,8 @@ sub validate_data {
         my $all = show_all;
 
         # Проверка на существование такого телефона
-        for my $existing_phone ( keys %{ $all } ) {
-            if ( $candidate_phone eq $existing_phone ) {
-                return { alert => 'This number is already used' };
-            }
+        if ( exists $all->{ $candidate_phone } ) {
+            return { alert => 'This number is already in use' };
         }
 
         return 1;
@@ -75,9 +73,9 @@ sub basic_search {
 
     for my $phone ( keys %{ $all } ) {
         # группируем телефон и имя(в нижнем регистре) в массив
-        my @pairs = ( $phone, lc( $all->{ $phone } ) );
+        my @contact = ( $phone, lc( $all->{ $phone } ) );
 
-        if ( grep /$pattern/, @pairs ) {
+        if ( grep /$pattern/, @contact ) {
             $result{ $phone } = $all->{ $phone };
         }
     }
@@ -101,11 +99,11 @@ sub search_with_character_addition {
     for my $i ( 0 .. $len ) {
         my $pattern = substr( $search_string, 0, $i ) . "." . substr( $search_string, $i );
 
-        my $basic_result = basic_search( $pattern, $all );
+        my $basic_search_result = basic_search( $pattern, $all );
 
-        for my $phone ( keys %{ $basic_result } ) {
+        for my $phone ( keys %{ $basic_search_result } ) {
             if ( not exists $result->{ $phone } ) {
-                $result->{ $phone } = $basic_result->{ $phone };
+                $result->{ $phone } = $basic_search_result->{ $phone };
             }
         }
     }
@@ -132,11 +130,11 @@ sub search_with_two_character_replacement {
             # Меняем второй символ в строке поиска
             my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "." . substr( $pattern_with_one_change, $j + 1 );
 
-            my $basic_result = basic_search( $pattern_with_two_changes, $all );
+            my $basic_search_result = basic_search( $pattern_with_two_changes, $all );
 
-            for my $phone ( keys %{ $basic_result } ) {
+            for my $phone ( keys %{ $basic_search_result } ) {
                 if ( not exists $result->{ $phone } ) {
-                    $result->{ $phone } = $basic_result->{ $phone };
+                    $result->{ $phone } = $basic_search_result->{ $phone };
                 }
             }
         }
@@ -154,8 +152,16 @@ sub advanced_search {
 
     my %result;
 
-    search_with_character_addition       ( $search_string, \%result, $all );
-    search_with_two_character_replacement( $search_string, \%result, $all );
+    search_with_character_addition(
+        $search_string,
+        \%result,
+        $all,
+    );
+    search_with_two_character_replacement(
+        $search_string,
+        \%result,
+        $all,
+    );
 
     return \%result;
 }
@@ -240,18 +246,16 @@ sub search_by_full_match {
 
     my $all = show_all;
 
-    # Поиск по полному совпадению паттерна с телефоном
-    for my $phone ( keys %{ $all } ) {
-        if ( $phone eq $pattern ) {
-            return { $phone => $all->{$phone} };
-        }
+    # Если телефон есть в БД, то возвращаем его
+    if ( exists $all->{ $pattern } ) {
+        return { $pattern => $all->{ $pattern } };
     }
 
     # Поиск по полному совпадению паттерна с именем
     my %result;
     for my $phone ( keys %{$all} ) {
-        if ( $all->{$phone} eq $pattern ){
-            $result{$phone} = $all->{$phone}
+        if ( $all->{ $phone } eq $pattern ){
+            $result{ $phone } = $all->{ $phone }
         }
     }
 
@@ -330,11 +334,11 @@ sub modify_contact {
         /;
 
         $db_link->do(
-                 $query,
-                 undef,
-                 $new_phone,
-                 $new_name,
-                 $old_phone,
+            $query,
+            undef,
+            $new_phone,
+            $new_name,
+            $old_phone,
         ) or die $db_link->errstr;
 
         $db_link->disconnect;

@@ -18,7 +18,7 @@ describe "Выборка данных из БД" => sub {
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'selectall_hashref' )->returns( \%fake_select_result );
-        $fake_mysql_link->expects( 'disconnect' )       ->returns( 0 );
+        $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
 
         MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 

@@ -23,8 +23,8 @@ describe "Передаём в функцию существующий патте
         my $pattern = 'test';
         my $expect  = { 123 => 'test' };
 
-        PhoneBook->expects( 'show_all' )       ->returns( {} );
-        PhoneBook->expects( 'basic_search' )   ->returns( $expect );
+        PhoneBook->expects( 'show_all' )->returns( {} );
+        PhoneBook->expects( 'basic_search' )->returns( $expect );
         PhoneBook->expects( 'advanced_search' )->returns( {} )->exactly( 0 );
 
         my $actual = PhoneBook::search( $pattern );
@@ -38,8 +38,8 @@ describe "Передаём в функцию существующий патте
         my $pattern = 'test';
         my $expect  = { 123 => 'test' };
 
-        PhoneBook->expects( 'show_all' )       ->returns( {} );
-        PhoneBook->expects( 'basic_search' )   ->returns( {} );
+        PhoneBook->expects( 'show_all' )->returns( {} );
+        PhoneBook->expects( 'basic_search' )->returns( {} );
         PhoneBook->expects( 'advanced_search' )->returns( $expect );
 
         my $actual = PhoneBook::search( $pattern );
@@ -53,8 +53,8 @@ describe "Передаём в функцию несуществующий пат
         my $pattern = 'test';
         my $expect  = { alert => 'The search did not find any suitable contacts' };
 
-        PhoneBook->expects( 'show_all' )       ->returns( {} );
-        PhoneBook->expects( 'basic_search' )   ->returns( {} );
+        PhoneBook->expects( 'show_all' )->returns( {} );
+        PhoneBook->expects( 'basic_search' )->returns( {} );
         PhoneBook->expects( 'advanced_search' )->returns( {} );
 
         my $actual = PhoneBook::search( $pattern );

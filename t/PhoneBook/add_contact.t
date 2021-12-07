@@ -18,7 +18,7 @@ describe "Передаём в функцию валидные данные :" =>
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
-        $fake_mysql_link->expects( 'do' )        ->returns( sub {
+        $fake_mysql_link->expects( 'do' )->returns( sub {
             my ( undef, $actual_query, undef, $actual_name, $actual_phone ) = @_;
 
             my $expected_query = 'INSERT INTO `contacts` (name,phone) VALUES (?,?)';
@@ -60,7 +60,7 @@ describe "Передаём в функцию не валидные данные,
         PhoneBook->expects( 'validate_data' )->returns( 1 );
 
         my $fake_mysql_link = mock();
-        $fake_mysql_link->expects( 'do' )    ->returns( 0 );
+        $fake_mysql_link->expects( 'do' )->returns( 0 );
         $fake_mysql_link->expects( 'errstr' )->returns( 0 );
 
         MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );

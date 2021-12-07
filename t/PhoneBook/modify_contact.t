@@ -22,7 +22,7 @@ describe "Передаём в функцию валидные данные :" =>
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
-        $fake_mysql_link->expects( 'do' )        ->returns( sub {
+        $fake_mysql_link->expects( 'do' )->returns( sub {
             my ( undef,
                 $actual_query,
                 undef,
@@ -71,7 +71,7 @@ describe "Передаём в функцию валидные данные :" =>
 
         my $fake_mysql_link = mock();
         $fake_mysql_link->expects( 'disconnect' )->returns( 0 );
-        $fake_mysql_link->expects( 'do' )        ->returns( 1 );
+        $fake_mysql_link->expects( 'do' )->returns( 1 );
 
         MysqlConnect->expects( 'create_connect' )->returns( $fake_mysql_link );
 

@@ -6,26 +6,6 @@ use Config::General;
 use File::Basename;
 use Modern::Perl;
 
-# объявление экспорта
-use base 'Exporter';
-our @EXPORT = qw(
-    modify_contact
-    remove_contact
-    add_contact
-    search_uniq_contact
-    search
-    show_all
-);
-our @EXPORT_OK = qw(
-    create_connect
-    validate_data
-    basic_search
-    advanced_search
-);
-our %EXPORT_TAGS = (
-    ALL => [ @EXPORT, @EXPORT_OK ],
-);
-
 my $dir_name = dirname(__FILE__);
 # Загружаем конфиг с атрибутами подключения к БД
 my %config = Config::General->new(
@@ -40,7 +20,7 @@ my %config = Config::General->new(
 # Выходные данные:
 #   Успешное подключение: линка с mysql подключением
 sub create_connect {
-    my $link = DBI->connect(
+    my $db_link = DBI->connect(
         "DBI:mysql:database=$config{DB};",
         $config{USER},
         $config{PASS},
@@ -51,7 +31,7 @@ sub create_connect {
     ) or die $DBI::errstr;
 
     # Если всё хорошо, то возвращаем линку
-    return $link;
+    return $db_link;
 }
 
 # Выборка всех данных из БД
@@ -59,13 +39,13 @@ sub create_connect {
 # Выходные данные:
 #   Успешное получение данных: ссылка на хэш Телефон=>Имя
 sub show_all {
-    my $link = create_connect;
+    my $db_link = create_connect;
 
     my $query        = 'SELECT * FROM `contacts`';
-    my $query_result = $link->selectall_hashref( $query, 'phone' )
-        or die $link->errstr;
+    my $query_result = $db_link->selectall_hashref( $query, 'phone' )
+        or die $db_link->errstr;
 
-    $link->disconnect;
+    $db_link->disconnect;
 
     # Превращаем полученные данные в удобные для обработки - хэш телефон=>Имя(телефон Primary Key в БД).
     my %result;
@@ -78,30 +58,32 @@ sub show_all {
 }
 
 # Проверка имени и номера
-# Входные данные: имя, номер
+# Входные данные:
+#   имя
+#   номер
 # Выходные данные:
-#   Успешная валидация: 0
+#   Успешная валидация: 1
 #   Проваленная валидация: хэш alert=>"Оповещение"
 sub validate_data {
-    my ( $candidat_name, $candidat_phone ) = @_;
+    my ( $candidate_name, $candidate_phone ) = @_;
 
     # Если ввели пустые данные, то ошибка
-    if ( length $candidat_name == 0 or length $candidat_phone == 0 ) {
+    if ( length $candidate_name == 0 or length $candidate_phone == 0 ) {
         return { alert => 'Empty values is not allowed' };
     }
 
     # Если номер создержит что-то кроме символа "+" и цифр - тригерим ошибку
-    if ( $candidat_phone =~ m/^\+?\d+$/ ) {
+    if ( $candidate_phone =~ m/^\+?\d+$/ ) {
         my $all = show_all;
 
         # Проверка на существование такого телефона
         for my $existing_phone ( keys %{ $all } ) {
-            if ( $candidat_phone eq $existing_phone ) {
+            if ( $candidate_phone eq $existing_phone ) {
                 return { alert => 'This number is already used' };
             }
         }
 
-        return 0;
+        return 1;
     }
     else {
         return { alert => 'Invalid phone number' };
@@ -109,19 +91,20 @@ sub validate_data {
 }
 
 # Тривальный поиск по полному сопадению значений
-# Входные данные: строка поиска, ссылка на хэш с результатами show_all.
 # Проверка строки на возможность её использования в регулярке /$pattern/ лежит на вызывающей стороне
+# Входные данные:
+#   строка поиска
+#   сылка на хэш с результатами show_all.
 # Выходные данные:
-#   Удачный поиск: ссылка на хэш с парами "Телефон" => "Имя"
-#   Поиск завершился ошибкой: хэш alert=>"Оповещение"
+#   Ссылка на хэш с парами "Телефон" => "Имя"
 sub basic_search {
     my ( $pattern, $all ) = @_;
 
     my %result;
 
     for my $phone ( keys %{ $all } ) {
-        # получаем пару значений в нижнем регистре
-        my @pairs = map { lc $_ } ( $phone, $all->{ $phone } );
+        # группируем телефон и имя(в нижнем регистре) в массив
+        my @pairs = ( $phone, lc( $all->{ $phone } ) );
 
         if ( grep /$pattern/, @pairs ) {
             $result{ $phone } = $all->{ $phone };
@@ -131,31 +114,43 @@ sub basic_search {
     return \%result;
 }
 
-# Расширенный(умный) поиск
-# Входные данные: строка поиска, ссылка на хэш с результатами show_all.
+
+# Поиск с добавлением одного символа в каждую позицию паттерна
+# Входные данные:
+#   строка поиска
+#   ссылка на хэш куда нужно поместить результат
+#   ссылка на хэш с результатами show_all
 # Выходные данные:
-#   Удачный поиск: ссылка на хэш с парами "Телефон" => "Имя"
-#   Поиск завершился ошибкой: хэш alert=>"Оповещение"
-sub advanced_search {
-    my ( $search_string, $all ) = @_;
+#   нет
+sub search_with_character_addition {
+    my ( $search_string, $result, $all ) = @_;
 
     my $len = length $search_string;
-    my %result;
 
-    # Добавляем один любой символ в каждое место строки поиска
     for my $i ( 0 .. $len ) {
         my $pattern = substr( $search_string, 0, $i ) . "." . substr( $search_string, $i );
 
-        # Ищем по получившемуся паттерну
         my $basic_result = basic_search( $pattern, $all );
 
-        # Добавляем только ранее не найденные контакты(что бы не создавать линки на элементы хэша)
         for my $phone ( keys %{ $basic_result } ) {
-            if ( not exists $result{ $phone } ) {
-                $result{ $phone } = $basic_result->{ $phone };
+            if ( not exists $result->{ $phone } ) {
+                $result->{ $phone } = $basic_result->{ $phone };
             }
         }
     }
+}
+
+# Поиск с заменой двух символов в паттерне
+# Входные данные:
+#   строка поиска
+#   ссылка на хэш куда нужно поместить результат
+#   ссылка на хэш с результатами show_all
+# Выходные данные:
+#   нет
+sub search_with_two_character_replacement {
+    my ( $search_string, $result, $all ) = @_;
+
+    my $len = length $search_string;
 
     # Меняем до 2 символов в строке поиска на любой
     for my $i ( 0 .. ( $len - 1 ) ) {
@@ -166,23 +161,37 @@ sub advanced_search {
             # Меняем второй символ в строке поиска
             my $pattern_with_two_changes = substr( $pattern_with_one_change, 0, $j ) . "." . substr( $pattern_with_one_change, $j + 1 );
 
-            # Ищем по получившемуся паттерну
             my $basic_result = basic_search( $pattern_with_two_changes, $all );
 
-            # Добавляем только ранее не найденные контакты(что бы не создавать линки на элементы хэша)
             for my $phone ( keys %{ $basic_result } ) {
-                if ( not exists $result{ $phone } ) {
-                    $result{ $phone } = $basic_result->{ $phone };
+                if ( not exists $result->{ $phone } ) {
+                    $result->{ $phone } = $basic_result->{ $phone };
                 }
             }
         }
     }
+}
+
+# Расширенный(умный) поиск
+# Входные данные:
+#   строка поиска
+#   ссылка на хэш с результатами show_all.
+# Выходные данные:
+#   Ссылка на хэш с парами "Телефон" => "Имя"
+sub advanced_search {
+    my ( $search_string, $all ) = @_;
+
+    my %result;
+
+    search_with_character_addition       ( $search_string, \%result, $all );
+    search_with_two_character_replacement( $search_string, \%result, $all );
 
     return \%result;
 }
 
-# Обёртка для поиска. Тригерит сначала тривиальный поиск и если там пусто, то задействует расширенный.
-# Входные данные: строка поиска
+# Обёртка для поиска. Тригерит сначала обычный поиск и если там пусто, то задействует расширенный.
+# Входные данные:
+#   строка поиска
 # Выходные данные:
 #   Удачный поиск: ссылка на хэш с парами "Телефон" => "Имя"
 #   Поиск завершился ошибкой: ссылка на хэш alert=>"Оповещение"
@@ -199,10 +208,10 @@ sub search {
     # Экранируем все спец символы в строке поиска и переводим её в нижний регистр.
     $search_string = lc( "\Q$search_string\E" );
 
-    # Производим поиск по полному совпадению со строкой
+    # Производим обычный поиск
     my $result = basic_search( $search_string, $all );
 
-    # Если полное совпадение не дало результатов, то производим расширенный поиск:
+    # Если обычный поиск не дал результатов, то производим расширенный поиск:
     if ( !%{ $result } ) {
         $result = advanced_search( $search_string, $all );
     }
@@ -216,7 +225,9 @@ sub search {
 }
 
 # Добавление контакнта в БД
-# Входные данные: имя, номер
+# Входные данные:
+#   имя
+#   номер
 # Выходные данные:
 #  Сcылка на хэш alert=>"Результат"
 sub add_contact {
@@ -225,18 +236,19 @@ sub add_contact {
     # Валидация данных на добавление
     my $is_valid = validate_data( $name, $number );
 
-    if ( $is_valid eq 0 ) {
-        my $link = create_connect;
+    if ( $is_valid eq 1 ) {
+        my $db_link = create_connect;
 
         my $query = 'INSERT INTO `contacts` (name,phone) VALUES (?,?)';
 
-        $link->do(
+        $db_link->do(
             $query,
             undef,
-            ( $name, $number ),
-        ) or die $link->errstr;
+            $name,
+            $number,
+        ) or die $db_link->errstr;
 
-        $link->disconnect;
+        $db_link->disconnect;
 
         return { alert => 'Contact was successfully added' };
     }
@@ -247,68 +259,61 @@ sub add_contact {
 
 # Поиск уникального значения в БД по паттерну.
 # По факту обёртка на searh, которая исключает варианты с возвратом нескольких значений
-# Входные данные: паттерн
+# Входные данные:
+#   паттерн
 # Выходные данные:
-#   Успешный поиск(единственного совпадения с паттерном): ссылка на хэш с контактом
-#   Поиск завершился ошибкой или выдал более 1 результата: ссылка на хэш с оповещением
-sub search_uniq_contact {
-    my ( $candidat ) = @_;
+#   Успешный поиск: хэш номер телефона => имя
+#   Поиск не дал результатов: ссылка на хэш alert => "Оповещение"
+sub search_by_full_match {
+    my ( $pattern ) = @_;
 
-    my $search_result = search( $candidat );
+    my $all = show_all;
 
-    # Если кандидат это номер телефона и присутвует в выборке
-    if ( exists $search_result->{ $candidat } ) {
-        return { $candidat => $search_result->{ $candidat } };
-    }
-    # Если кандидат полностью совпадает имени контакт[а|ов]
-    elsif ( grep /^$candidat$/, values %{ $search_result } ) {
-        my %uniq_result;
-
-        # Добавляем все контакты с таким именем в промежуточный хэш
-        for my $phone ( keys %{ $search_result } ){
-            if ( grep /^$candidat$/, $search_result->{ $phone } ) {
-                $uniq_result{ $phone } = $search_result->{ $phone };
-            }
-        }
-
-        # Если найден только один контакт с таким именем, то возвращаем его
-        if ( %uniq_result == 1 ) {
-            return \%uniq_result;
+    # Поиск по полному совпадению паттерна с телефоном
+    for my $phone ( keys %{ $all } ) {
+        if ( $phone eq $pattern ) {
+            return { $phone => $all->{$phone} };
         }
     }
 
-    # Если выборка вернула более одного результата
-    if ( %{ $search_result } > 1 ) {
-        return { alert => 'A search of your pattern returned more than one value.'
-                          .' Please provide an identifier that is unique to the contact.'
-        };
+    # Поиск по полному совпадению паттерна с именем
+    my %result;
+    for my $phone ( keys %{$all} ) {
+        if ( $all->{$phone} eq $pattern ){
+            $result{$phone} = $all->{$phone}
+        }
     }
 
-    # В остальных случаях просто возвращаем результат(alert или единственный найденный контакт).
-    # Контакт возвращается когда пользователь искал по имени и оно оказалось уникальным
-    # Остальные кейсы обрабатываются if-ом выше
-    return $search_result;
+    # Если найдено только одно полное совпадение с именем, то возвращаем его
+    if ( keys %result == 1 ) {
+        return \%result;
+    }
+
+    # Если поиск вообще не дал результатов или дал более одного результата - возвращаем алерт
+    return { alert => 'A search on your pattern yielded no unique result.'
+                     .' Please provide an identifier that is unique to the contact.'
+    };
 }
 
 # Удаление контакта
 # Проверка передаваемых данные лежит на вызывающей стороне.
-# Перед удалением вызвать search_uniq_contact и использовать телефон из результата.
-# Входные данные: номер телефона
+# Входные данные:
+#   номер телефона
 # Выходные данные:
 #   Ссылка на хэш alert => "Результат"
 sub remove_contact {
     my ( $removable_phone ) = @_;
 
-    my $link = create_connect;
+    my $db_link = create_connect;
 
     my $query = 'DELETE FROM `contacts` WHERE `phone` = ?';
-    my $res   = $link->do(
+    my $res   = $db_link->do(
         $query,
         undef,
         $removable_phone,
-    ) or die $link->errstr;
+    ) or die $db_link->errstr;
 
-    $link->disconnect;
+    $db_link->disconnect;
 
     # Проверка на случай, если вызов функции будет выполнен с неверным параметром
     if ( $res eq "0E0" ) {
@@ -319,24 +324,33 @@ sub remove_contact {
 }
 
 # Изменение контакта
-# Входные данные: старое/новое имя, старый/новый телефон
+# Входные данные: %
+#   old_name*  => string
+#   new_name*  => string
+#   old_phone* => string
+#   new_phone* => string
 # Выходные данные:
 # Ссылка на хэш alert => "Результат"
 sub modify_contact {
-    my ( $old_name, $new_name, $old_phone, $new_phone ) = @_;
+    my %param = @_;
+
+    my $old_name  = $param{old_name};
+    my $new_name  = $param{new_name};
+    my $old_phone = $param{old_phone};
+    my $new_phone = $param{new_phone};
 
     # Валидация новых данных
     my $validate_result = validate_data( $new_name, $new_phone );
 
     # Если валидация успешная или старый телефон равен новому(и валидация тригерит ошибку по этому), то всё меняем данные
     if (
-        $validate_result eq 0
+        $validate_result eq 1
         || (
             $validate_result->{alert} eq 'This number is already used'
             && $old_phone eq $new_phone
         )
     ) {
-        my $link = create_connect;
+        my $db_link = create_connect;
 
         my $query = q/
             UPDATE `contacts`
@@ -344,13 +358,15 @@ sub modify_contact {
              WHERE `phone` = ?
         /;
 
-        $link->do(
+        $db_link->do(
                  $query,
                  undef,
-                 ( $new_phone, $new_name, $old_phone ),
-        ) or die $link->errstr;
+                 $new_phone,
+                 $new_name,
+                 $old_phone,
+        ) or die $db_link->errstr;
 
-        $link->disconnect;
+        $db_link->disconnect;
 
         return { alert => 'The contact has been successfully modified' };
     }

@@ -8,7 +8,7 @@ use PhoneBook;
 
 # Отрисовка главной страницы
 get '/' => sub ($c) {
-    my $contacts = show_all;
+    my $contacts = PhoneBook::show_all;
 
     if ( exists $contacts->{alert} ) {
         $c->render(
@@ -29,7 +29,7 @@ post '/add' => sub ($c) {
     my $phone = $c->param( 'phone' );
     my $name  = $c->param( 'name'  );
 
-    my $result = add_contact( $name, $phone );
+    my $result = PhoneBook::add_contact( $name, $phone );
 
     # Возвращается всегда аллетр, поэтому задействуем только этот шаблон
     $c->render(
@@ -42,7 +42,7 @@ post '/add' => sub ($c) {
 post '/search' => sub ($c) {
     my $pattern = $c->param( 'data' );
 
-    my $contacts = search( $pattern );
+    my $contacts = PhoneBook::search( $pattern );
 
     if ( exists $contacts->{alert} ) {
         $c->render(
@@ -60,22 +60,22 @@ post '/search' => sub ($c) {
 
 # Удаление контакта
 post '/delete' => sub ($c) {
-    my $candidat = $c->param( 'data' );
+    my $candidate = $c->param( 'data' );
 
     # Производим уникальный поиск по паттерну
-    my $search_result = search_uniq_contact( $candidat );
+    my $contact = PhoneBook::search_by_full_match( $candidate );
 
     # Если поиск нашёл более одного значения или завершился ошибкой - выводим алерт
-    if ( exists $search_result->{alert} ) {
+    if ( exists $contact->{alert} ) {
         $c->render(
             template => 'alert',
-            alert    => $search_result->{alert},
+            alert    => $contact->{alert},
         );
     }
     # Если поиск вернул лишь одно значение - удаляем контакт
     else {
-        my ( $phone, undef ) = each %{ $search_result };
-        my $remove_result    = remove_contact( $phone );
+        my $phone         = %{ $contact };
+        my $remove_result = PhoneBook::remove_contact( $phone );
 
         $c->render(
             template => 'alert',
@@ -86,41 +86,34 @@ post '/delete' => sub ($c) {
 
 # Поиск контакта для модификации
 get '/modify' => sub($c) {
-    my $candidat = $c->param( 'data' );
+    my $candidate = $c->param( 'data' );
 
     # Производим уникальный поиск по паттерну
-    my $search_result = search_uniq_contact( $candidat );
+    my $contact = PhoneBook::search_by_full_match( $candidate );
     # Если поиск нашёл более одного значения или завершился ошибкой - выводим алерт
-    if ( exists $search_result->{alert} ) {
+    if ( exists $contact->{alert} ) {
         $c->render(
             template => 'alert',
-            alert    => $search_result->{alert},
+            alert    => $contact->{alert},
         );
     }
     # Поиск вернул одно значение - отрисовываем шаблон для редактирования
     else {
         $c->render(
             template => 'modify',
-            rows     => $search_result,
+            rows     => $contact,
         );
     }
 };
 
 # Модификация контакта
 post '/modify' => sub($c) {
-    my $old_name  = $c->param( 'old_name'  );
-    my $new_name  = $c->param( 'new_name'  );
-    my $old_phone = $c->param( 'old_phone' );
-    my $new_phone = $c->param( 'new_phone' );
-
-    # Тригерим само изменение
-    my $result = modify_contact(
-        $old_name,
-        $new_name,
-        $old_phone,
-        $new_phone,
+    my $result = PhoneBook::modify_contact(
+        old_name  => $c->param( 'old_name'  ),
+        new_name  => $c->param( 'new_name'  ),
+        old_phone => $c->param( 'old_phone' ),
+        new_phone => $c->param( 'new_phone' ),
     );
-
     # Возвращается всегда алерт(как при удачном редактировании так и при ошибке).
     $c->render(
         template => 'alert',
